@@ -1,5 +1,4 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -9,12 +8,12 @@ module.exports = {
   },
   // The location of the build folder described above
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, './'),
     filename: 'bundle.js'
   },
   devtool: 'inline-source-map',
   devServer: {
-    static: './dist',
+    static: './',
   },
   // Optional and for development only. This provides the ability to
   // map the built code back to the original source format when debugging.
