@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <title>Disco Uploader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!--  <script src="index.js"></script>-->
+  <script src="bundle.js"></script>
+</head>
+<body style="background: #aaa; padding: 30px">
+  <div>
+    <div id="status" style="padding: 20px; margin-bottom: 40px; border: 2px solid #666">
+      Enter the Password 🔑 and Load Shops
+    </div>
+
+    <!--SIGN IN-->
+    <div style="display: flex; align-items: baseline">
+      <h2 style="margin-right: 10px">1</h2>
+      <div>
+        <label for="password">🔑 Password</label>
+        <input id="password" type="password">
+      </div>
+    </div>
+
+    <hr/>
+
+    <!--SHOPS-->
+    <div style="display: flex; margin-bottom: 15px">
+      <h2 style="margin-right: 10px">2</h2>
+      <button style="height: 50px; background-color: forestgreen" onclick={showShops()}>Load Shops</button>
+    </div>
+    <div style="margin-bottom: 15px">
+      <label for="shops-list">🏬 Магазин</label>
+      <select id="shops-list"></select>
+    </div>
+
+    <hr/>
+
+    <!--DATES-->
+    <div style="display: flex; margin-bottom: 15px">
+      <h2 style="margin-right: 10px">3 Fill Discount:</h2>
+    </div>
+    <div style="margin-bottom: 15px">
+      <label for="date-start">📆 Дата Начало. Пример: 2023-03-24</label>
+      <input id="date-start">
+    </div>
+    <div style="margin-bottom: 15px">
+      <label for="date-end">📅 Дата Конец. Пример: 2023-03-24</label>
+      <input id="date-end">
+    </div>
+
+    <!--PREVIEW UR:-->
+    <div style="margin-bottom: 15px">
+      <label>
+        <div>🌅 URL картинки-превью</div>
+        <div>Пример: https://hitdiscount.by/0.jpg</div>
+      </label>
+      <div style="margin-top: 7px">
+        <div><input id="preview-url" style="width: 800px; margin-bottom: 5px"></div>
+      </div>
+    </div>
+
+    <!--URLS-->
+    <div style="margin-bottom: 15px">
+      <label>
+        <div>🔗 URLs картинок скидок</div>
+        <div>Пример: https://hitdiscount.by/1.jpg</div>
+      </label>
+      <div id="inputs-container" style="margin-top: 7px">
+        <div><input class="image-url" style="width: 800px; margin-bottom: 5px"></div>
+      </div>
+      <button id="add-input-button" onclick="addInput()">+ Add more</button>
+    </div>
+
+    <hr/>
+    <!--SAVE-->
+    <div style="display: flex; margin-bottom: 15px">
+      <h2 style="margin-right: 10px">4</h2>
+      <button style="height: 50px; background-color: forestgreen" onclick={onSave()}>SAVE</button>
+    </div>
+
+    <!--CLEAR-->
+    <div style="display: flex; margin-bottom: 15px">
+      <button style="height: 30px" onclick={clearAllFields()}>Clear fields</button>
+    </div>
+
+  </div>
+
+  <script src="bundle.js"></script>
+</body>
+</html>
