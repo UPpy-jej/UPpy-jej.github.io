@@ -15,10 +15,6 @@ To open it on Win - push 'Shift + Right click' in the folder -> open Command lin
 3. Follow described steps to fill the discount
 4. Save
 
-### Editing (if you know what you are doing)
-You could change any UI, just remember 'discountPayload' shape and 
-make sure it doesn't change after your changes
-
 ### Dev notes
-
+- NEED TO BUILD `npm run build` and push 'dist' as well to update github pages
 - Initialised based on this guide https://firebase.google.com/docs/web/module-bundling?authuser=0
