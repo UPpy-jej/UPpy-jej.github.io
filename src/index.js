@@ -117,37 +117,37 @@ async function onSave () {
   }
 
   const statusElement = document.getElementById('status')
-  // try {
-  //   const discountId = generateHexadecimalHash(24)
+  try {
+    const discountId = generateHexadecimalHash(24)
     
-  //   // Save discount
-  //   const discountResponse = await set(ref(database, 'discounts/' + discountId), discountPayload);
-  //   console.log('discountResponse',discountResponse)
+    // Save discount
+    const discountResponse = await set(ref(database, 'discounts/' + discountId), discountPayload);
+    console.log('discountResponse',discountResponse)
 
-  //   // Get selected shop's discounts and add new discount
-  //   const shopDiscountsRef = ref(database, `shops/${selectedShopId}/discounts`);
-  //   const discountsSnapshot = await get(shopDiscountsRef)
-  //   let discounts = discountsSnapshot.val()
-  //   console.log('discounts',discounts)
+    // Get selected shop's discounts and add new discount
+    const shopDiscountsRef = ref(database, `shops/${selectedShopId}/discounts`);
+    const discountsSnapshot = await get(shopDiscountsRef)
+    let discounts = discountsSnapshot.val()
+    console.log('discounts',discounts)
 
-  //   let extendedDiscounts;
-  //   if (discounts && discounts.length) {
-  //     // discounts.push(discountId)
-  //     extendedDiscounts = await set(shopDiscountsRef, [...discounts, discountId]);
-  //   } else {
-  //     extendedDiscounts = await set(shopDiscountsRef, [discountId]);
-  //   }
-  //   console.log('extendedDiscounts',extendedDiscounts)
+    let extendedDiscounts;
+    if (discounts && discounts.length) {
+      // discounts.push(discountId)
+      extendedDiscounts = await set(shopDiscountsRef, [...discounts, discountId]);
+    } else {
+      extendedDiscounts = await set(shopDiscountsRef, [discountId]);
+    }
+    console.log('extendedDiscounts',extendedDiscounts)
 
-  //   statusElement.innerText = `Success! 😎 Discount is saved and attached to the shop 🛍️`
-  //   statusElement.style.borderColor = 'darkgreen'
+    statusElement.innerText = `Success! 😎 Discount is saved and attached to the shop 🛍️`
+    statusElement.style.borderColor = 'darkgreen'
 
-  //   clearAllFields()
-  // } catch (e) {
-  //   console.log('e',e)
-  //   statusElement.innerText = `Error: ${e}`
-  //   statusElement.style.borderColor = 'tomato'
-  // }
+    clearAllFields()
+  } catch (e) {
+    console.log('e',e)
+    statusElement.innerText = `Error: ${e}`
+    statusElement.style.borderColor = 'tomato'
+  }
 }
 
 function validate({dateStart, dateEnd, imagesUrls, selectedShopId}) {
