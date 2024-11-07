@@ -99,7 +99,13 @@ async function onSave () {
   const previewUrl = document.getElementById('preview-url').value
   const imagesUrls = [...document.querySelectorAll('.image-url')]
     .filter(e => !!e.value)
-    .map(e => e.value)
+    // Replace S3 url to CloudFront CDN url
+    .map(e => e.value.replace('https://listowka-disco.s3.eu-central-1.amazonaws.com/', 'https://d83qhhedg12j5.cloudfront.net/'))
+
+  console.log('CHECK that s3 urls are replaced to cdn urls:')
+  console.log('imagesUrls',imagesUrls)
+
+    
   const dateStart = document.getElementById('date-start').value
   const dateEnd = document.getElementById('date-end').value
 
@@ -111,37 +117,37 @@ async function onSave () {
   }
 
   const statusElement = document.getElementById('status')
-  try {
-    const discountId = generateHexadecimalHash(24)
+  // try {
+  //   const discountId = generateHexadecimalHash(24)
     
-    // Save discount
-    const discountResponse = await set(ref(database, 'discounts/' + discountId), discountPayload);
-    console.log('discountResponse',discountResponse)
+  //   // Save discount
+  //   const discountResponse = await set(ref(database, 'discounts/' + discountId), discountPayload);
+  //   console.log('discountResponse',discountResponse)
 
-    // Get selected shop's discounts and add new discount
-    const shopDiscountsRef = ref(database, `shops/${selectedShopId}/discounts`);
-    const discountsSnapshot = await get(shopDiscountsRef)
-    let discounts = discountsSnapshot.val()
-    console.log('discounts',discounts)
+  //   // Get selected shop's discounts and add new discount
+  //   const shopDiscountsRef = ref(database, `shops/${selectedShopId}/discounts`);
+  //   const discountsSnapshot = await get(shopDiscountsRef)
+  //   let discounts = discountsSnapshot.val()
+  //   console.log('discounts',discounts)
 
-    let extendedDiscounts;
-    if (discounts && discounts.length) {
-      // discounts.push(discountId)
-      extendedDiscounts = await set(shopDiscountsRef, [...discounts, discountId]);
-    } else {
-      extendedDiscounts = await set(shopDiscountsRef, [discountId]);
-    }
-    console.log('extendedDiscounts',extendedDiscounts)
+  //   let extendedDiscounts;
+  //   if (discounts && discounts.length) {
+  //     // discounts.push(discountId)
+  //     extendedDiscounts = await set(shopDiscountsRef, [...discounts, discountId]);
+  //   } else {
+  //     extendedDiscounts = await set(shopDiscountsRef, [discountId]);
+  //   }
+  //   console.log('extendedDiscounts',extendedDiscounts)
 
-    statusElement.innerText = `Success! 😎 Discount is saved and attached to the shop 🛍️`
-    statusElement.style.borderColor = 'darkgreen'
+  //   statusElement.innerText = `Success! 😎 Discount is saved and attached to the shop 🛍️`
+  //   statusElement.style.borderColor = 'darkgreen'
 
-    clearAllFields()
-  } catch (e) {
-    console.log('e',e)
-    statusElement.innerText = `Error: ${e}`
-    statusElement.style.borderColor = 'tomato'
-  }
+  //   clearAllFields()
+  // } catch (e) {
+  //   console.log('e',e)
+  //   statusElement.innerText = `Error: ${e}`
+  //   statusElement.style.borderColor = 'tomato'
+  // }
 }
 
 function validate({dateStart, dateEnd, imagesUrls, selectedShopId}) {
