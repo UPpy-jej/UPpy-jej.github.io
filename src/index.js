@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { getDatabase, ref, child, get, set } from "firebase/database";
+import { getFirestore, doc, collection, getDocs, setDoc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -10,7 +10,6 @@ import { getDatabase, ref, child, get, set } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyAHdPBt_onC3s43YXlnsxgik8iwDjrfkt4",
   authDomain: "disco-2ac9d.firebaseapp.com",
-  databaseURL: "https://disco-2ac9d-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "disco-2ac9d",
   storageBucket: "disco-2ac9d.appspot.com",
   messagingSenderId: "797784164653",
@@ -20,10 +19,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
 // Initialize Realtime Database and get a reference to the service
 // Initialize Firebase Authentication and get a reference to the service
 const auth = getAuth(app);
-const database = getDatabase(app);
+// Initialize Firestore instead of Realtime Database
+const db = getFirestore(app);
 
 async function signIn(password) {
   const statusElement = document.getElementById('status')
@@ -47,34 +48,35 @@ async function signIn(password) {
 
 
 async function showShops() {
-  const dbRef = ref(database);
   const statusElement = document.getElementById('status')
   const passwordElement = document.getElementById('password')
   
-  console.log('passwordElement',passwordElement)
-  
-
-  console.log('passwordElement.innerText',passwordElement.value)
   const user = await signIn(passwordElement.value)
-  console.log('user1111',user)
   if (!user) {
     return
   }
 
-  try {
-    const shopsSnapshot = await get(child(dbRef, `shops/`))
+  // Verify user is authenticated and has correct email
+  if (user.email !== 'listowka.discount@gmail.com') {
+    statusElement.innerText = `Unauthorized email address!!!`
+    statusElement.style.borderColor = 'tomato'
+    return
+  }
 
-    if (shopsSnapshot.exists()) {
-      const shops = shopsSnapshot.val()
-      console.log('shops:', shops);
+  try {
+    // Get all documents from shops collection
+    const shopsSnapshot = await getDocs(collection(db, 'shops'));
+
+    if (!shopsSnapshot.empty) {
+      const shopsSelect = document.getElementById('shops-list');
+      
+      shopsSnapshot.forEach((doc) => {
+        const shopId = doc.id;
+        shopsSelect.add(new Option(shopId, shopId));
+      });
 
       statusElement.innerText = `Shops are loaded! 🛒`
       statusElement.style.borderColor = 'darkgreen'
-
-      const shopsSelect = document.getElementById('shops-list');
-      Object.keys(shops).forEach(shopId => {
-        shopsSelect.add(new Option(shopId, shopId));
-      })
 
       setTimeout(() => {
         statusElement.innerText = `Choose Shop and fill in Discount data -> click Save`
@@ -93,6 +95,21 @@ async function showShops() {
 }
 
 async function onSave () {
+  // First verify authentication
+  const user = auth.currentUser;
+  const statusElement = document.getElementById('status')
+
+  // Add these debug logs
+  console.log('Current user:', user);
+  console.log('User email:', user?.email);
+  console.log('Is user authenticated?', !!user);
+
+  if (!user || user.email !== 'listowka.discount@gmail.com') {
+    statusElement.innerText = `Not authenticated or unauthorized email. Please sign in first.`
+    statusElement.style.borderColor = 'tomato'
+    return
+  }
+
   const selectedShopId = document.getElementById('shops-list').value;
   console.log('selectedShopId',selectedShopId)
 
@@ -104,7 +121,6 @@ async function onSave () {
 
   console.log('CHECK that s3 urls are replaced to cdn urls:')
   console.log('imagesUrls',imagesUrls)
-
     
   const dateStart = document.getElementById('date-start').value
   const dateEnd = document.getElementById('date-end').value
@@ -116,28 +132,21 @@ async function onSave () {
     return
   }
 
-  const statusElement = document.getElementById('status')
   try {
     const discountId = generateHexadecimalHash(24)
     
-    // Save discount
-    const discountResponse = await set(ref(database, 'discounts/' + discountId), discountPayload);
-    console.log('discountResponse',discountResponse)
+    // Add more debug logs
+    console.log('Attempting to write with user:', user.email);
+    console.log('Writing discount with ID:', discountId);
+    console.log('Payload:', discountPayload);
+    
+    await setDoc(doc(db, 'discounts', discountId), discountPayload);
 
-    // Get selected shop's discounts and add new discount
-    const shopDiscountsRef = ref(database, `shops/${selectedShopId}/discounts`);
-    const discountsSnapshot = await get(shopDiscountsRef)
-    let discounts = discountsSnapshot.val()
-    console.log('discounts',discounts)
-
-    let extendedDiscounts;
-    if (discounts && discounts.length) {
-      // discounts.push(discountId)
-      extendedDiscounts = await set(shopDiscountsRef, [...discounts, discountId]);
-    } else {
-      extendedDiscounts = await set(shopDiscountsRef, [discountId]);
-    }
-    console.log('extendedDiscounts',extendedDiscounts)
+    // Update shop's discounts array
+    const shopRef = doc(db, 'shops', selectedShopId);
+    await updateDoc(shopRef, {
+      discounts: arrayUnion(discountId)
+    });
 
     statusElement.innerText = `Success! 😎 Discount is saved and attached to the shop 🛍️`
     statusElement.style.borderColor = 'darkgreen'
