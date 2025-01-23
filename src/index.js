@@ -99,7 +99,6 @@ async function onSave () {
   const user = auth.currentUser;
   const statusElement = document.getElementById('status')
 
-  // Add these debug logs
   console.log('Current user:', user);
   console.log('User email:', user?.email);
   console.log('Is user authenticated?', !!user);
@@ -124,18 +123,25 @@ async function onSave () {
     
   const dateStart = document.getElementById('date-start').value
   const dateEnd = document.getElementById('date-end').value
+  const shouldNotify = document.getElementById('should-notify').checked
 
-  const discountPayload = {dateStart, dateEnd, previewUrl, imagesUrls}
+  const discountPayload = {
+    dateStart, 
+    dateEnd, 
+    previewUrl, 
+    imagesUrls, 
+    shopId: selectedShopId,
+    shouldNotify
+  }
   console.log('discountPayload',discountPayload)
 
-  if (!validate({...discountPayload, selectedShopId})) {
+  if (!validate({...discountPayload})) {
     return
   }
 
   try {
     const discountId = generateHexadecimalHash(24)
-    
-    // Add more debug logs
+
     console.log('Attempting to write with user:', user.email);
     console.log('Writing discount with ID:', discountId);
     console.log('Payload:', discountPayload);
@@ -159,10 +165,10 @@ async function onSave () {
   }
 }
 
-function validate({dateStart, dateEnd, imagesUrls, selectedShopId}) {
+function validate({dateStart, dateEnd, imagesUrls, shopId}) {
   const statusElement = document.getElementById('status')
 
-  if (!selectedShopId) {
+  if (!shopId) {
     statusElement.innerText = `🏬️ Choose a Shop!`
     statusElement.style.borderColor = 'tomato'
     return false
@@ -212,6 +218,7 @@ function clearAllFields() {
   document.getElementById('date-end').value = '';
   document.getElementById('shops-list').value = '';
   document.getElementById('preview-url').value = '';
+  document.getElementById('should-notify').checked = true; // Reset to default checked state
 
   const statusElement = document.getElementById('status')
   setTimeout(() => {
