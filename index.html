@@ -20,6 +20,11 @@
         <label for="password">🔑 Password</label>
         <input id="password" type="password">
       </div>
+      <div style="margin-left: 20px">
+        <!-- S3 STORAGE SECRET KEY -->
+        <label for="s3-secret">🗝️ Storage Secret key</label>
+        <input id="s3-secret" type="password" autocomplete="new-password">
+      </div>
     </div>
 
     <hr/>
@@ -42,11 +47,24 @@
     </div>
     <div style="margin-bottom: 15px">
       <label for="date-start">📆 Дата Начало. Пример: 2023-03-24</label>
-      <input id="date-start">
+      <input id="date-start" onchange="updateImagesFolderName()">
     </div>
     <div style="margin-bottom: 15px">
       <label for="date-end">📅 Дата Конец. Пример: 2023-03-24</label>
-      <input id="date-end">
+      <input id="date-end" onchange="updateImagesFolderName()">
+    </div>
+
+    <!--IMAGES FOLDER NAME TO COPY-->
+    <div style="margin-bottom: 15px">
+      <label for="copy-images-folder-name">📋 Use this folder name for images:</label>
+      <input id="copy-images-folder-name" readonly style="width: 200px; background-color: #eee" 
+             onclick="this.select();">
+
+      <!--LOAD IMAGES FROM S3-->
+      <button id="load-images-button" onclick="loadImagesFromS3()" style="height: 36px; border: 4px solid green">
+        <span id="load-images-text">📂 Load images from folder</span>
+        <span id="load-images-loader" style="display: none">⌛ Loading...</span>
+      </button>
     </div>
 
     <!--PREVIEW UR:-->

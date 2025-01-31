@@ -2,6 +2,11 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, collection, getDocs, setDoc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import AWS from 'aws-sdk';
+
+// SHOULD BE SYNCED WITH OTHER PROJECTS USING IMAGES AND THUMBNAILS
+const THUMBNAIL_PREFIX = "thumb-"
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -25,6 +30,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 // Initialize Firestore instead of Realtime Database
 const db = getFirestore(app);
+
+const S3_ENDPOINT = "storage-221.s3hoster.by";
+const S3_ACCESS_KEY_ID = "9EYXOVHMB8GQPEU9ZHCY";
+const BUCKET_NAME = "main-bucket";
+// Initialize S3 client with empty secret - will be set when needed
+const s3 = new AWS.S3({
+  accessKeyId: S3_ACCESS_KEY_ID,
+  secretAccessKey: "", // Will be set before S3 operations
+  endpoint: S3_ENDPOINT,
+  s3ForcePathStyle: true,
+});
 
 async function signIn(password) {
   const statusElement = document.getElementById('status')
@@ -210,6 +226,7 @@ function addInput() {
   newInput.style.marginBottom = '5px'
 
   container.appendChild(newInput)
+  return newInput
 }
 
 function clearAllFields() {
@@ -218,7 +235,8 @@ function clearAllFields() {
   document.getElementById('date-end').value = '';
   document.getElementById('shops-list').value = '';
   document.getElementById('preview-url').value = '';
-  document.getElementById('should-notify').checked = true; // Reset to default checked state
+  document.getElementById('should-notify').checked = true;
+  document.getElementById('copy-images-folder-name').value = '';
 
   const statusElement = document.getElementById('status')
   setTimeout(() => {
@@ -241,7 +259,108 @@ function isValidDateFormat(dateString) {
   return false;
 }
 
-window.showShops = showShops
-window.clearAllFields = clearAllFields
-window.addInput = addInput
-window.onSave = onSave
+// Add event listeners to update images folder name
+document.getElementById('shops-list').addEventListener('change', updateImagesFolderName);
+document.getElementById('date-start').addEventListener('change', updateImagesFolderName);
+document.getElementById('date-end').addEventListener('change', updateImagesFolderName);
+
+function updateImagesFolderName() {
+  const shopId = document.getElementById('shops-list').value;
+  const dateStart = document.getElementById('date-start').value;
+  const dateEnd = document.getElementById('date-end').value;
+  
+  const copyText = document.getElementById('copy-images-folder-name');
+  copyText.value = [shopId, dateStart, dateEnd].filter(Boolean).join('_');
+}
+
+async function loadImagesFromS3() {
+  const button = document.getElementById('load-images-button');
+  const textSpan = document.getElementById('load-images-text');
+  const loaderSpan = document.getElementById('load-images-loader');
+  
+  const folderName = document.getElementById('copy-images-folder-name').value;
+  const s3Secret = document.getElementById('s3-secret').value;
+  
+  if (!s3Secret) {
+    const statusElement = document.getElementById('status');
+    statusElement.innerText = `Please enter S3 Secret Key!`;
+    statusElement.style.borderColor = 'tomato';
+    return;
+  }
+
+  if (!folderName) {
+    const statusElement = document.getElementById('status');
+    statusElement.innerText = `Please select shop and dates first to generate folder name!`;
+    statusElement.style.borderColor = 'tomato';
+    return;
+  }
+
+  try {
+    // Update S3 client with the secret key - modified to update credentials properly
+    s3.config.update({
+      credentials: new AWS.Credentials({
+        accessKeyId: S3_ACCESS_KEY_ID,
+        secretAccessKey: s3Secret
+      })
+    });
+
+    // Show loader
+    button.disabled = true;
+    textSpan.style.display = 'none';
+    loaderSpan.style.display = 'inline';
+
+    const params = {
+      Bucket: BUCKET_NAME,
+      Prefix: folderName + '/'
+    };
+
+    const data = await s3.listObjectsV2(params).promise();
+    
+    if (!data.Contents || data.Contents.length === 0) {
+      console.log(`No images found in folder: ${folderName}`);
+      return;
+    }
+
+    // Get URLs excluding thumbnails and folders
+    const urls = data.Contents
+      .map(item => `https://${S3_ENDPOINT}/${BUCKET_NAME}/${item.Key}`)
+      .filter(url => !url.endsWith('/')) // Filter out folder itself
+      .filter(url => !url.includes(THUMBNAIL_PREFIX)); // Filter out thumbnails
+
+    // Clear existing inputs
+    const container = document.getElementById('inputs-container');
+    container.innerHTML = '';
+
+    // Set the first URL as preview URL
+    if (urls.length > 0) {
+      document.getElementById('preview-url').value = urls[0];
+    }
+
+    // Create and populate inputs for each URL using existing addInput function
+    urls.forEach(url => {
+      const input = addInput();
+      input.value = url;
+    });
+
+    console.log(`Populated ${urls.length} image URLs`);
+
+  } catch (error) {
+    console.error('Error loading images from S3:', error);
+    const statusElement = document.getElementById('status');
+    statusElement.innerText = `Error loading images: ${error.message}`;
+    statusElement.style.borderColor = 'tomato';
+  } finally {
+    // Hide loader and restore button
+    button.disabled = false;
+    textSpan.style.display = 'inline';
+    loaderSpan.style.display = 'none';
+  }
+}
+
+// Add to window object
+window.showShops = showShops;
+window.clearAllFields = clearAllFields;
+window.addInput = addInput;
+window.onSave = onSave;
+window.updateImagesFolderName = updateImagesFolderName;
+window.loadImagesFromS3 = loadImagesFromS3;
